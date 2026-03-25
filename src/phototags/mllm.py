@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 import re
 from dataclasses import dataclass
+from pathlib import Path
 
 from openai import OpenAI
+
+_log = logging.getLogger("phototags")
 
 
 ANALYSIS_PROMPT = """Analyze this image and respond with a JSON object only (no other text). Use this exact structure:
@@ -30,6 +34,7 @@ def analyze_image(
     model: str,
     image_bytes: bytes,
     mime_type: str = "image/jpeg",
+    source: Path | str | None = None,
 ) -> AnalysisResult | None:
     """
     Send image to the model and parse structured JSON (title, description, keywords).
@@ -38,6 +43,7 @@ def analyze_image(
     """
     b64 = base64.standard_b64encode(image_bytes).decode("ascii")
     data_uri = f"data:{mime_type};base64,{b64}"
+    label = str(source) if source is not None else "(unknown path)"
 
     try:
         response = client.chat.completions.create(
@@ -53,11 +59,19 @@ def analyze_image(
             ],
             max_tokens=512,
         )
-    except Exception:
+    except Exception as e:
+        _log.error("MLLM analysis failed: %s — API error: %s", label, e)
         return None
 
     text = (response.choices[0].message.content or "").strip()
     parsed = _parse_analysis_json(text)
+    if parsed is None:
+        preview = text[:400] + ("…" if len(text) > 400 else "")
+        _log.error(
+            "MLLM analysis failed: %s — could not parse JSON from model output (%r)",
+            label,
+            preview if preview else "(empty)",
+        )
     return parsed
 
 

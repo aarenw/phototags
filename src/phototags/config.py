@@ -12,8 +12,8 @@ except ImportError:
     yaml = None  # type: ignore[assignment]
 
 DEFAULT_API_BASE = "http://localhost:11434/v1"
-DEFAULT_MODEL = "qwen2.5-vl:7b"
-DEFAULT_THUMB_MAX_DIM = 1024
+DEFAULT_MODEL = "qwen2.5vl:7b"
+DEFAULT_THUMB_MAX_DIM = 600  #1024
 CONFIG_FILENAMES = ("phototags.yaml", "phototags.yml")
 
 

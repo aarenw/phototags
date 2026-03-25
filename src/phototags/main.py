@@ -100,9 +100,8 @@ def main() -> None:
             continue
 
         image_bytes, mime_type = thumb
-        result = analyze_image(client, config.model, image_bytes, mime_type)
+        result = analyze_image(client, config.model, image_bytes, mime_type, source=path)
         if result is None:
-            log.error("MLLM analysis failed: %s", path)
             continue
 
         log.info(
